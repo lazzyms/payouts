@@ -1,0 +1,1 @@
+Add stripe secret key as STRIPE_SECRET_KEY in .env file
