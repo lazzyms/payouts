@@ -81,12 +81,10 @@ module.exports.getAllOwner = (req, res) => {
 // manual payout
 module.exports.payout = (req, res) => {
     console.log('request body', req.body)
-    if (req.body.bank && req.body.amount && req.body.ownerId) {
+    if (req.body.source && req.body.amount && req.body.ownerId) {
         console.log('validated')
 
-        //TODO get total available balance and bank id with stripe
-
-        stripeHelper.payout(req.body.bank, req.body.amount, req.body.ownerId).then(payout => {
+        stripeHelper.payout(req.body.source, req.body.amount, req.body.ownerId).then(payout => {
             console.log('payout done')
             res.status(200).send({ success: true, result: { data: payout } })
         }).catch(err => {
@@ -94,8 +92,8 @@ module.exports.payout = (req, res) => {
         })
     } else {
         console.log('validation error')
-        if (!req.body.bank) {
-            res.status(400).send({ success: false, result: { message: 'Bank id required' } })
+        if (!req.body.source) {
+            res.status(400).send({ success: false, result: { message: 'Source id required' } })
         } else if (!req.body.amount) {
             res.status(400).send({ success: false, result: { message: 'Payout amount is required' } })
         } else if(!req.body.ownerId) {

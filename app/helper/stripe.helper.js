@@ -191,7 +191,7 @@ let getAllConnectAccount = () => {
 let payout = (bank, amount, ownerId) => {
     return new Promise((resolve, reject) => {
         stripe.payouts.create(
-            { amount: amount * 100, currency: 'usd', destination: bank },
+            { amount: amount * 100, currency: 'usd', destination: source },
             {
                 stripeAccount: ownerId,
             },
