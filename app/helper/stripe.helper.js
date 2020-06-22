@@ -147,10 +147,11 @@ let createStripeConnect = (data) => {
                         postal_code: 123458,
                         state: 'Georgia'
                     },
-                    phone:'0000000000'
+                    phone: '0000000000'
                 },
                 business_profile: {
-                    url: data.url
+                    url: data.url,
+                    mcc: 5814 // For "Fast Food Restaurants", for others visit https://stripe.com/docs/connect/setting-mcc#list
                 },
                 settings: {
                     payouts: {
@@ -158,17 +159,123 @@ let createStripeConnect = (data) => {
                             interval: 'manual'
                         }
                     }
-                }
+                },
+                // relationship: {
+                //     representative: {
+                //         first_name: data.representative.firstName,
+                //         last_name: data.representative.lastName,
+                //         dob: {
+                //             day: data.representative.dob.split('-')[2],
+                //             month: data.representative.dob.split('-')[1],
+                //             year: data.representative.dob.split('-')[0]
+                //         },
+                //         address: {
+                //             line1: data.address,
+                //             city: 'Manchester',
+                //             postal_code: 123458,
+                //             state: 'Georgia',
+                //             country: 'US'
+                //         },
+                //         ssn_last_4: data.representative.ssn,
+                //         relationship: {
+                //             title: data.representative.title
+                //         },
+                //         email: data.representative.email,
+                //         phone: data.representative.phone,
+                //         executive: true
+                //     },
+                //     owner: {
+                //         first_name: data.owner.firstName,
+                //         last_name: data.owner.lastName,
+                //         email: data.owner.lastName
+                //     }
+                // }
             },
             function (err, account) {
                 if (err) {
                     reject(err)
                 } else {
-                    resolve(account)
+                    createRepresentative(data.representative, data.address, account.id).then(data => {
+                        resolve(data)
+                    }).catch(err => {
+                        reject(err)
+                    })
                 }
             }
         );
     })
+}
+
+let createRepresentative = (representative, address, account) => {
+    return new Promise((resolve, reject) => {
+        stripe.accounts.createPerson(
+            account,
+            {
+                first_name: representative.firstName,
+                last_name: representative.lastName,
+                dob: {
+                    day: representative.dob.split('-')[2],
+                    month: representative.dob.split('-')[1],
+                    year: representative.dob.split('-')[0]
+                },
+                address: {
+                    line1: address,
+                    city: 'Manchester',
+                    postal_code: 123458,
+                    state: 'Georgia',
+                    country: 'US'
+                },
+                ssn_last_4: representative.ssn,
+                relationship: {
+                    title: representative.title,
+                    representative: true,
+                    executive: true
+                },
+                email: representative.email,
+                phone: representative.phone,
+                verification: {
+                    document: {
+                        front: 'file_identity_document_success',
+                        details: 'file_identity_document_success'
+                    },
+                    additional_document: {
+                        front: 'file_identity_document_success',
+                        details: 'file_identity_document_success'
+                    },
+                }
+            },
+            function (err, person) {
+                if (err) {
+                    reject(err)
+                } else {
+                    stripe.accounts.update(
+                        account,
+                        {
+                            company: {
+                                executives_provided: true,
+                                owners_provided: true
+                            }
+                        },
+                        function (err, account) {
+                            if (err) {
+                                reject(err)
+                            } else {
+                                console.log('account updated')
+                                let data = {
+                                    account: account,
+                                    person: person
+                                }
+                                resolve(data)
+                            }
+                        }
+                    );
+                    // console.log('Perosn added:', person)
+                    // resolve(person)
+                }
+            }
+        );
+    })
+
 }
 
 // get all stripe connect accont

@@ -1,5 +1,4 @@
 let stripeHelper = require('../helper/stripe.helper')
-const { model } = require('mongoose')
 
 // accept payment from customers
 module.exports.createCharge = (req, res) => {
@@ -41,10 +40,11 @@ module.exports.createCharge = (req, res) => {
 
 // create owner
 module.exports.createOwner = (req, res) => {
-    if (req.body.email && req.body.name && req.body.taxId && req.body.routingNumber && req.body.accountNumber && req.body.ip && req.body.url) {
+    if (req.body.email && req.body.name && req.body.taxId && req.body.token && req.body.ip && req.body.url) {
         stripeHelper.createStripeConnect(req.body).then(data => {
             res.status(200).send({ success: true, result: { data: data } })
         }).catch(err => {
+            console.log(err)
             res.status(400).send({ success: false, result: { messge: err.message } })
         })
     } else {
@@ -52,10 +52,8 @@ module.exports.createOwner = (req, res) => {
             res.status(400).send({ success: false, result: { message: 'Email is required' } })
         } else if (!req.body.name) {
             res.status(400).send({ success: false, result: { message: 'Company Name is required' } })
-        } else if (!req.body.routingNumber) {
-            res.status(400).send({ success: false, result: { message: 'Routing Number is required' } })
-        } else if (!req.body.accountNumber) {
-            res.status(400).send({ success: false, result: { message: 'Account Number is required' } })
+        } else if (!req.body.token) {
+            res.status(400).send({ success: false, result: { message: 'Card token is required' } })
         } else if (!req.body.ip) {
             res.status(400).send({ success: false, result: { message: 'Ip address is required' } })
         } else if (!req.body.url) {
@@ -96,7 +94,7 @@ module.exports.payout = (req, res) => {
             res.status(400).send({ success: false, result: { message: 'Source id required' } })
         } else if (!req.body.amount) {
             res.status(400).send({ success: false, result: { message: 'Payout amount is required' } })
-        } else if(!req.body.ownerId) {
+        } else if (!req.body.ownerId) {
             res.status(400).send({ success: false, result: { message: 'OwnerId is required' } })
         }
     }
